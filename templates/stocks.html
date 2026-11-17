@@ -1,0 +1,82 @@
+<div class="stack">
+  <div class="page-head">
+    <h1>Stocks</h1>
+    <div class="row">
+      <form method="post" action="/m/stocks/refresh"><button class="btn btn-ghost" type="submit">Refresh now</button></form>
+      <a class="btn btn-ghost" href="/">Back to Abode</a>
+    </div>
+  </div>
+
+  {{if not .HaveData}}
+    <div class="alert alert-ok" role="status">Pricing your positions for the first time. Refresh in a few seconds.</div>
+  {{else}}
+    <p class="muted">Updated {{.Updated}}. No brokerage connection: positions are entered by hand, and nothing here can place or change a trade.</p>
+
+    <section class="panel stack">
+      <h2>Portfolio</h2>
+      {{if eq .Summary.Positions 0}}
+        <p class="muted">No positions yet. Add your first lot below.</p>
+      {{else}}
+        <div class="bar-row">
+          <div><span>Value</span><span>${{.Summary.Value}}</span></div>
+          <div class="bar"><i style="width:100%"></i></div>
+        </div>
+        <div class="bar-row">
+          <div><span>Gain</span><span>{{.Summary.GainPct}} (${{.Summary.GainUSD}})</span></div>
+          <div class="bar{{if .Summary.Warn}} bar--warn{{end}}"><i style="width:{{if .Summary.Warn}}40{{else}}70{{end}}%"></i></div>
+        </div>
+        <p class="muted">Cost basis ${{.Summary.Cost}} across {{.Summary.Positions}} lot{{if ne .Summary.Positions 1}}s{{end}}{{if lt .Summary.Priced .Summary.Positions}}, {{.Summary.Priced}} priced{{end}}.</p>
+      {{end}}
+    </section>
+
+    {{if .Positions}}
+    <section class="panel stack">
+      <h2>Positions</h2>
+      <div class="table-wrap">
+      <table class="tbl">
+        <thead><tr><th>Ticker</th><th>Shares</th><th>Bought at</th><th>On</th><th>Price</th><th>Gain</th><th></th></tr></thead>
+        <tbody>
+          {{range .Positions}}
+          <tr{{if .Warn}} class="row-warn"{{end}}>
+            <td>{{.Ticker}}</td>
+            <td>{{.Shares}}</td>
+            <td>${{.BuyPrice}}</td>
+            <td class="muted">{{.BoughtAt}}</td>
+            <td>${{.Price}}</td>
+            <td class="{{if .Warn}}down{{end}}">{{.GainPct}} (${{.GainUSD}})</td>
+            <td>
+              <form method="post" action="/m/stocks/positions/{{.ID}}/delete">
+                <button class="btn btn-danger btn-sm" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+      </div>
+    </section>
+    {{end}}
+  {{end}}
+
+  <section class="panel stack">
+    <h2>Add a lot</h2>
+    {{if .FormError}}<div class="alert alert-error" role="alert">{{.FormError}}</div>{{end}}
+    <form method="post" action="/m/stocks/positions" class="stack">
+      <div class="row">
+        <label class="field"><span>Ticker</span>
+          <input type="text" name="ticker" maxlength="10" placeholder="AAPL" required>
+        </label>
+        <label class="field"><span>Shares</span>
+          <input type="number" name="shares" step="any" min="0" required>
+        </label>
+        <label class="field"><span>Buy price</span>
+          <input type="number" name="buy_price" step="any" min="0" required>
+        </label>
+        <label class="field"><span>Bought on (optional)</span>
+          <input type="date" name="bought_at">
+        </label>
+      </div>
+      <div class="row"><button class="btn" type="submit">Add lot</button></div>
+    </form>
+  </section>
+</div>
